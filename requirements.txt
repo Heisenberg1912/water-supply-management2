@@ -1,5 +1,13 @@
+# First, uninstall numpy to remove any pre-installed conflicting versions
+!pip uninstall -y numpy
+
+# Then install the correct version of numpy
 numpy==1.24.3
---no-deps tensorflow==2.14.1
+
+# Install TensorFlow without automatically installing numpy
+tensorflow==2.14.1 --no-deps
+
+# Install the rest of the dependencies
 pandas==2.0.2
 joblib==1.2.0
 matplotlib==3.7.1
