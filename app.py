@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from streamlit_option_menu import option_menu
 
 # Generate example household data
-@st.experimental_memo
+@st.cache
 def generate_household_data(start_date, end_date):
     np.random.seed(42)  # For reproducible results
     num_households = 100
