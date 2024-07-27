@@ -1,15 +1,12 @@
-# requirements.txt
-!pip uninstall -y numpy
-numpy==1.22.0
-
-tensorflow==2.12.0 
-pandas==2.0.2
-joblib==1.2.0
-matplotlib==3.7.1
-seaborn==0.12.2
-plotly==5.12.0
-streamlit==1.10.0
-scikit-learn==1.2.2
-streamlit-option-menu==0.3.2
-pyarrow==12.0.1
-fastparquet==0.9.0
+numpy
+tensorflow
+pandas
+joblib
+matplotlib
+seaborn
+plotly
+streamlit
+scikit-learn
+streamlit-option-menu
+pyarrow
+fastparquet
