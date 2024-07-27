@@ -1,6 +1,8 @@
 # requirements.txt
+!pip uninstall -y numpy
+numpy==1.24.3
+tensorflow==2.12.0 --no-deps
 pandas==2.0.2
-tensorflow==2.14.1
 joblib==1.2.0
 matplotlib==3.7.1
 seaborn==0.12.2
