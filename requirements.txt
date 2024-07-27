@@ -18,4 +18,4 @@ jupyter-core
 markupsafe==2.0.1
 yellowbrick
 mlflow
-pandas-profiling<=2.9.0
+pandas-profiling<2.8.0
