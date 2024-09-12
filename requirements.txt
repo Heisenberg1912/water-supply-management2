@@ -12,3 +12,4 @@ streamlit-aggrid
 altair
 click
 protobuf
+pycaret
