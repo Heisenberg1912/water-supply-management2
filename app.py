@@ -36,29 +36,45 @@ if st.checkbox('Show Heat Map'):
 # PyCaret setup
 if st.sidebar.checkbox('Setup PyCaret Environment'):
     target_variable = st.sidebar.selectbox('Select Target Variable', household_data.columns)
+    
     if target_variable:
-        pycaret_setup = setup(data=household_data, target=target_variable, silent=True, session_id=123)
-        st.write('PyCaret environment setup complete.')
+        try:
+            # Ensure data types are correct
+            household_data = household_data.dropna()  # Drop missing values
+            # Run PyCaret setup
+            pycaret_setup = setup(data=household_data, target=target_variable, silent=True, session_id=123)
+            st.write('PyCaret environment setup complete.')
+        except Exception as e:
+            st.error(f"Error setting up PyCaret environment: {e}")
 
 # Train and compare models
 if st.sidebar.button('Train Models'):
     with st.spinner('Training models...'):
-        best_model = compare_models()
-        st.write('Best Model:', best_model)
-        model_results = pull()
-        st.dataframe(model_results)
+        try:
+            best_model = compare_models()
+            st.write('Best Model:', best_model)
+            model_results = pull()
+            st.dataframe(model_results)
 
-        # Save the model
-        save_model(best_model, 'best_model_pycaret')
+            # Save the model
+            save_model(best_model, 'best_model_pycaret')
+        except Exception as e:
+            st.error(f"Error training models: {e}")
 
 # Load a saved model for prediction
 if st.sidebar.checkbox('Load Model for Prediction'):
-    model = load_model('best_model_pycaret')
-    st.write('Model loaded successfully.')
+    try:
+        model = load_model('best_model_pycaret')
+        st.write('Model loaded successfully.')
+    except Exception as e:
+        st.error(f"Error loading the model: {e}")
 
     # Make predictions
     user_input = st.text_input('Enter new data for prediction (comma-separated values)')
     if user_input:
-        data = pd.DataFrame([list(map(float, user_input.split(',')))], columns=household_data.columns[:-1])
-        prediction = model.predict(data)
-        st.write('Prediction:', prediction)
+        try:
+            data = pd.DataFrame([list(map(float, user_input.split(',')))], columns=household_data.columns[:-1])
+            prediction = model.predict(data)
+            st.write('Prediction:', prediction)
+        except Exception as e:
+            st.error(f"Error making predictions: {e}")
