@@ -1,6 +1,6 @@
 numpy
-tensorflow
 pandas
+tensorflow
 joblib
 matplotlib
 seaborn
@@ -8,5 +8,7 @@ plotly
 streamlit
 scikit-learn
 streamlit-option-menu
-pyarrow
-fastparquet
+streamlit-aggrid
+altair
+click
+protobuf
