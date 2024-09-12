@@ -12,4 +12,6 @@ streamlit-aggrid
 altair
 click
 protobuf
+folium
+streamlit-folium
 pycaret
