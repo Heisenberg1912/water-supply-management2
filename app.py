@@ -4,7 +4,7 @@ import numpy as np
 from tensorflow.keras.models import load_model
 
 # Load the emotion detection model
-model = load_model(r"C:\Users\0mEn\Desktop\emotion_model.h5")
+model = "emotion_model.h5"
 
 # Emotion labels
 emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
