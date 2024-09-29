@@ -1,15 +1,19 @@
 import streamlit as st
-import cv2
 import numpy as np
+import cv2
 from tensorflow.keras.models import load_model
 
-# Load the emotion detection model
-model = "emotion_model.h5"
+# Load your emotion detection model with caching
+@st.cache_resource
+def load_emotion_model():
+    return load_model('emotion_model.h5')
 
-# Emotion labels
+model = load_emotion_model()
+
+# Define emotion labels
 emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
 
-# Function to detect emotions
+# Function to detect emotion from the image
 def detect_emotion(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -34,26 +38,23 @@ def detect_emotion(frame):
 
 # Streamlit UI
 st.title("Real-Time Emotion Detection")
-run = st.button('Start Emotion Detection')
 
-if run:
-    cap = cv2.VideoCapture(0)
+# Capture webcam input
+image_file = st.camera_input("Take a picture")
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            st.write("Failed to capture video")
-            break
+if image_file:
+    # Convert the image to OpenCV format
+    file_bytes = np.asarray(bytearray(image_file.read()), dtype=np.uint8)
+    frame = cv2.imdecode(file_bytes, 1)
 
+    if frame is not None:
         # Detect emotions in the frame
-        frame = detect_emotion(frame)
+        result_frame = detect_emotion(frame)
 
-        # Convert the image to RGB for Streamlit
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        
-        # Display the frame in Streamlit
-        st.image(frame_rgb, channels='RGB', use_column_width=True)
+        # Convert the image back to RGB for Streamlit
+        result_rgb = cv2.cvtColor(result_frame, cv2.COLOR_BGR2RGB)
 
-        if st.button('Stop'):
-            cap.release()
-            break
+        # Display the frame with detected emotions
+        st.image(result_rgb, channels='RGB', use_column_width=True)
+    else:
+        st.error("Failed to process the image.")
