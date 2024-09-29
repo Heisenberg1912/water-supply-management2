@@ -15,3 +15,5 @@ protobuf
 folium
 streamlit-folium
 pycaret
+opencv-python
+keras
