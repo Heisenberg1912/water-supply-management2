@@ -15,7 +15,7 @@ def to_excel_bytes(df):
 st.set_page_config(page_title="Comprehensive Tally App", layout="wide")
 
 # App Title
-st.title("Comprehensive Inventory-management Application")
+st.title("Comprehensive Tally-like Application")
 
 # Sidebar Navigation for Modules
 modules = [
@@ -51,6 +51,9 @@ if selection == "Accounting & Financial Management":
         "Amount": [1000, -500, 2000, -1500, 500]
     })
     st.table(ledger_data)
+    st.download_button("Download Ledger as Excel", data=to_excel_bytes(ledger_data),
+                       file_name="general_ledger.xlsx",
+                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("Accounts Receivable/Payable")
     st.write("Track money owed to and by the business.")
@@ -59,6 +62,9 @@ if selection == "Accounting & Financial Management":
         "Amount Due": [1500, 2300]
     })
     st.table(receivables)
+    st.download_button("Download Receivables as Excel", data=to_excel_bytes(receivables),
+                       file_name="accounts_receivable.xlsx",
+                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("Bank Reconciliation")
     st.write("Upload a bank statement Excel file to reconcile transactions.")
@@ -79,6 +85,9 @@ if selection == "Accounting & Financial Management":
         "Actual": [9500, 13000, 14000]
     })
     st.table(budget_data)
+    st.download_button("Download Budget Data as Excel", data=to_excel_bytes(budget_data),
+                       file_name="budgeting_forecasting.xlsx",
+                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("Multi-Currency Support & Financial Statements")
     st.write("Select a currency and generate financial statements.")
@@ -91,6 +100,9 @@ if selection == "Accounting & Financial Management":
                 "Amount": [15000, 7000, 8000]
             })
             st.table(bs_data)
+            st.download_button("Download Balance Sheet as Excel", data=to_excel_bytes(bs_data),
+                               file_name="balance_sheet.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         elif statement_type == "Profit & Loss":
             pl_data = pd.DataFrame({
                 "Revenue": [15000],
@@ -98,6 +110,9 @@ if selection == "Accounting & Financial Management":
                 "Net Profit": [7000]
             })
             st.table(pl_data)
+            st.download_button("Download Profit & Loss as Excel", data=to_excel_bytes(pl_data),
+                               file_name="profit_loss.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         elif statement_type == "Cash Flow":
             cf_data = pd.DataFrame({
                 "Operating Activities": [5000],
@@ -106,6 +121,9 @@ if selection == "Accounting & Financial Management":
                 "Net Cash Flow": [4000]
             }, index=["Value"])
             st.table(cf_data)
+            st.download_button("Download Cash Flow as Excel", data=to_excel_bytes(cf_data),
+                               file_name="cash_flow.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         st.success(f"{statement_type} generated in {currency} (simulated).")
         
     st.subheader("Cost Centers & Profitability Analysis")
@@ -117,7 +135,11 @@ if selection == "Accounting & Financial Management":
         "Income": [10000, 15000, 12000, 8000],
         "Expenses": [5000, 7000, 6000, 4000]
     })
-    st.table(cc_data[cc_data["Cost Center"] == selected_center])
+    selected_cc = cc_data[cc_data["Cost Center"] == selected_center]
+    st.table(selected_cc)
+    st.download_button("Download Profitability Data as Excel", data=to_excel_bytes(selected_cc),
+                       file_name="profitability_analysis.xlsx",
+                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     st.success(f"Profitability analysis for {selected_center} (simulated).")
 
 # 2. Inventory Management
@@ -132,6 +154,9 @@ elif selection == "Inventory Management":
         "Reorder Level": [20, 10, 30]
     })
     st.table(inventory)
+    st.download_button("Download Inventory as Excel", data=to_excel_bytes(inventory),
+                       file_name="inventory.xlsx",
+                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("Batch-wise Tracking")
     st.write("Enter batch details for inventory items.")
@@ -141,6 +166,15 @@ elif selection == "Inventory Management":
         expiry_date = st.date_input("Expiry Date", value=datetime.now() + timedelta(days=365))
         batch_submitted = st.form_submit_button("Add Batch Info")
         if batch_submitted:
+            batch_df = pd.DataFrame({
+                "Item Name": [item_name],
+                "Batch Number": [batch_number],
+                "Expiry Date": [expiry_date]
+            })
+            st.table(batch_df)
+            st.download_button("Download Batch Data as Excel", data=to_excel_bytes(batch_df),
+                               file_name="batch_tracking.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"Batch {batch_number} for {item_name} with expiry {expiry_date} added (simulated).")
     
     st.subheader("Multi-location Support & GST Compliance")
@@ -156,6 +190,16 @@ elif selection == "Inventory Management":
         if gst_submitted:
             gst_amount = base_price * gst_rate / 100  # Current formula for GST
             total_price = base_price + gst_amount
+            result_df = pd.DataFrame({
+                "Base Price": [base_price],
+                "GST Rate (%)": [gst_rate],
+                "GST Amount": [gst_amount],
+                "Total Price": [total_price]
+            })
+            st.table(result_df)
+            st.download_button("Download GST Calculation as Excel", data=to_excel_bytes(result_df),
+                               file_name="gst_calculation.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"GST: {gst_amount:.2f}, Total Price: {total_price:.2f} (simulated).")
 
 # 3. Taxation & Compliance
@@ -168,6 +212,14 @@ elif selection == "Taxation & Compliance":
         amount = st.number_input("Invoice Amount", min_value=0.0, step=10.0)
         submitted = st.form_submit_button("Generate GST Invoice")
         if submitted:
+            gst_invoice = pd.DataFrame({
+                "Customer": [customer],
+                "Invoice Amount": [amount]
+            })
+            st.table(gst_invoice)
+            st.download_button("Download GST Invoice as Excel", data=to_excel_bytes(gst_invoice),
+                               file_name="gst_invoice.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"GST Invoice generated for {customer} for amount {amount} (simulation).")
     
     st.subheader("TDS & TCS")
@@ -180,6 +232,17 @@ elif selection == "Taxation & Compliance":
         if tds_tcs_submitted:
             tds = income * tds_rate / 100  # Current formula for TDS
             tcs = income * tcs_rate / 100  # Current formula for TCS
+            tds_tcs_df = pd.DataFrame({
+                "Total Income": [income],
+                "TDS Rate (%)": [tds_rate],
+                "TDS": [tds],
+                "TCS Rate (%)": [tcs_rate],
+                "TCS": [tcs]
+            })
+            st.table(tds_tcs_df)
+            st.download_button("Download TDS/TCS Calculation as Excel", data=to_excel_bytes(tds_tcs_df),
+                               file_name="tds_tcs_calculation.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"TDS: {tds:.2f}, TCS: {tcs:.2f} (simulated).")
     
     st.subheader("VAT, Excise & E-Way Bill")
@@ -192,6 +255,17 @@ elif selection == "Taxation & Compliance":
         if vat_excise_submitted:
             vat_amount = product_value * vat_rate / 100  # Current formula for VAT
             excise_amount = product_value * excise_rate / 100  # Current formula for Excise Duty
+            vat_excise_df = pd.DataFrame({
+                "Product Value": [product_value],
+                "VAT Rate (%)": [vat_rate],
+                "VAT Amount": [vat_amount],
+                "Excise Rate (%)": [excise_rate],
+                "Excise Duty": [excise_amount]
+            })
+            st.table(vat_excise_df)
+            st.download_button("Download VAT/Excise Calculation as Excel", data=to_excel_bytes(vat_excise_df),
+                               file_name="vat_excise_calculation.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"VAT: {vat_amount:.2f}, Excise Duty: {excise_amount:.2f} (simulated).")
     
     st.write("Generate E-Way Bill")
@@ -201,6 +275,16 @@ elif selection == "Taxation & Compliance":
         transport_id = st.text_input("Transport ID")
         eway_submitted = st.form_submit_button("Generate E-Way Bill")
         if eway_submitted:
+            eway_df = pd.DataFrame({
+                "Consigner": [consigner],
+                "Consignee": [consignee],
+                "Transport ID": [transport_id],
+                "Date": [datetime.now().strftime("%Y-%m-%d")]
+            })
+            st.table(eway_df)
+            st.download_button("Download E-Way Bill as Excel", data=to_excel_bytes(eway_df),
+                               file_name="e_way_bill.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"E-Way Bill generated for consigner {consigner} (simulated).")
 
 # 4. Invoicing & Billing
@@ -214,6 +298,16 @@ elif selection == "Invoicing & Billing":
         inv_amount = st.number_input("Amount", min_value=0.0, step=10.0)
         invoice_submitted = st.form_submit_button("Generate Invoice")
         if invoice_submitted:
+            invoice_df = pd.DataFrame({
+                "Invoice Number": [inv_number],
+                "Customer Name": [cust_name],
+                "Amount": [inv_amount],
+                "Date": [datetime.now().strftime("%Y-%m-%d")]
+            })
+            st.table(invoice_df)
+            st.download_button("Download Invoice as Excel", data=to_excel_bytes(invoice_df),
+                               file_name="invoice.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"Invoice {inv_number} generated for {cust_name} (simulation).")
     
     st.subheader("Sales/Purchase Orders")
@@ -223,6 +317,16 @@ elif selection == "Invoicing & Billing":
         order_amount = st.number_input("Order Amount", min_value=0.0, step=10.0)
         order_submitted = st.form_submit_button("Place Order")
         if order_submitted:
+            order_df = pd.DataFrame({
+                "Order Type": [order_type],
+                "Order Number": [order_number],
+                "Order Amount": [order_amount],
+                "Date": [datetime.now().strftime("%Y-%m-%d")]
+            })
+            st.table(order_df)
+            st.download_button("Download Order as Excel", data=to_excel_bytes(order_df),
+                               file_name="order.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"{order_type} {order_number} placed for amount {order_amount} (simulated).")
     
     st.subheader("Credit/Debit Notes")
@@ -232,6 +336,16 @@ elif selection == "Invoicing & Billing":
         note_amount = st.number_input("Note Amount", min_value=0.0, step=10.0)
         note_submitted = st.form_submit_button("Generate Note")
         if note_submitted:
+            note_df = pd.DataFrame({
+                "Note Type": [note_type],
+                "Note Number": [note_number],
+                "Note Amount": [note_amount],
+                "Date": [datetime.now().strftime("%Y-%m-%d")]
+            })
+            st.table(note_df)
+            st.download_button("Download Note as Excel", data=to_excel_bytes(note_df),
+                               file_name="credit_debit_note.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"{note_type} {note_number} generated for amount {note_amount} (simulated).")
     
     st.subheader("Multi-User Support")
@@ -248,6 +362,9 @@ elif selection == "Payroll Management":
         "Department": ["HR", "Finance", "IT"]
     })
     st.table(employees)
+    st.download_button("Download Employee Data as Excel", data=to_excel_bytes(employees),
+                       file_name="employees.xlsx",
+                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("Salary Processing")
     with st.form("salary_form"):
@@ -257,6 +374,16 @@ elif selection == "Payroll Management":
         process = st.form_submit_button("Process Salary")
         if process:
             total_salary = basic_salary + bonus  # Standard salary calculation
+            salary_df = pd.DataFrame({
+                "Employee ID": [emp_id],
+                "Basic Salary": [basic_salary],
+                "Bonus": [bonus],
+                "Total Salary": [total_salary]
+            })
+            st.table(salary_df)
+            st.download_button("Download Salary Data as Excel", data=to_excel_bytes(salary_df),
+                               file_name="salary_processing.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"Salary processed for Employee {emp_id}: Total = {total_salary}")
     
     st.subheader("Statutory Compliance & Payslip Generation")
@@ -279,6 +406,9 @@ elif selection == "Payroll Management":
                 "Net Salary": [net_salary]
             })
             st.table(payslip)
+            st.download_button("Download Payslip as Excel", data=to_excel_bytes(payslip),
+                               file_name="payslip.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success("Payslip generated (simulation).")
 
 # 6. Reporting & Analytics
@@ -291,6 +421,9 @@ elif selection == "Reporting & Analytics":
         'Value': np.random.randn(50).cumsum()
     })
     st.line_chart(chart_data.set_index('Date'))
+    st.download_button("Download Chart Data as Excel", data=to_excel_bytes(chart_data),
+                       file_name="chart_data.xlsx",
+                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("Customizable & Drill-Down Reports")
     st.write("Filter data by date range to drill down into reports.")
@@ -304,6 +437,9 @@ elif selection == "Reporting & Analytics":
         st.line_chart(filtered_data.set_index('Date'))
         st.write("Drill-down details:")
         st.table(filtered_data)
+        st.download_button("Download Drill-Down Data as Excel", data=to_excel_bytes(filtered_data),
+                           file_name="drill_down_report.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         st.success("Customizable drill-down report generated (simulated).")
 
 # 7. Data Security & Backup
@@ -337,6 +473,9 @@ elif selection == "Data Security & Backup":
         "Action": ["Created Invoice", "Processed Salary", "Updated Ledger", "Generated Report", "Logged in"]
     })
     st.table(audit_logs)
+    st.download_button("Download Audit Logs as Excel", data=to_excel_bytes(audit_logs),
+                       file_name="audit_logs.xlsx",
+                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     st.success("Audit trail displayed (simulation).")
 
 # 8. Integration & Connectivity
@@ -350,6 +489,10 @@ elif selection == "Integration & Connectivity":
         "Method": ["GET", "POST", "GET"]
     })
     st.table(api_endpoints)
+    st.download_button("Download API Endpoints as Excel", data=to_excel_bytes(api_endpoints),
+                       file_name="api_endpoints.xlsx",
+                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    
     st.write("Simulate an API call:")
     with st.form("api_call_form"):
         endpoint = st.selectbox("Select Endpoint", ["/api/invoices", "/api/ledger", "/api/employees"])
@@ -362,10 +505,10 @@ elif selection == "Integration & Connectivity":
     uploaded_file = st.file_uploader("Choose an Excel file to import", type=["xlsx"], key="import_file")
     if uploaded_file is not None:
         imported_data = pd.read_excel(uploaded_file)
+        st.table(imported_data.head())
         st.success("File imported successfully (simulation).")
     dummy_export = pd.DataFrame({"Data": [1, 2, 3, 4, 5]})
-    excel_data = to_excel_bytes(dummy_export)
-    st.download_button("Download Sample Data", data=excel_data, 
+    st.download_button("Download Sample Data as Excel", data=to_excel_bytes(dummy_export),
                        file_name="sample_data.xlsx",
                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
@@ -382,6 +525,15 @@ elif selection == "Banking & Payments":
         account_number = st.text_input("Account Number")
         integration_submitted = st.form_submit_button("Sync Bank Data")
         if integration_submitted:
+            integration_df = pd.DataFrame({
+                "Bank Name": [bank_name],
+                "Account Number": [account_number],
+                "Sync Date": [datetime.now().strftime("%Y-%m-%d")]
+            })
+            st.table(integration_df)
+            st.download_button("Download Bank Integration Data as Excel", data=to_excel_bytes(integration_df),
+                               file_name="bank_integration.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"Bank data from {bank_name} synced successfully (simulated).")
     
     st.subheader("Payment Reminders")
@@ -395,18 +547,17 @@ elif selection == "Banking & Payments":
         cheque_number = st.text_input("Cheque Number")
         cheque_submitted = st.form_submit_button("Print Cheque")
         if cheque_submitted:
-            st.success(f"Cheque {cheque_number} for {payee} printed (simulated).")
-            # Create a dummy DataFrame with cheque details
             cheque_df = pd.DataFrame({
                 "Cheque Number": [cheque_number],
                 "Payee": [payee],
                 "Amount": [amount],
                 "Date": [datetime.now().strftime("%Y-%m-%d")]
             })
-            cheque_excel = to_excel_bytes(cheque_df)
-            st.download_button("Download Cheque", data=cheque_excel, 
+            st.table(cheque_df)
+            st.download_button("Download Cheque as Excel", data=to_excel_bytes(cheque_df),
                                file_name="cheque.xlsx",
                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            st.success(f"Cheque {cheque_number} for {payee} printed (simulated).")
 
 # 10. Multi-Company & Multi-Location
 elif selection == "Multi-Company & Multi-Location":
@@ -423,6 +574,9 @@ elif selection == "Multi-Company & Multi-Location":
             "Company C": [12000, 6000, 6000]
         })
         st.table(consolidated_data)
+        st.download_button("Download Consolidated Report as Excel", data=to_excel_bytes(consolidated_data),
+                           file_name="consolidated_report.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         st.success("Consolidated report generated (simulated).")
 
 # 11. Customization & Scalability
@@ -442,6 +596,9 @@ elif selection == "Customization & Scalability":
         "Version": ["1.0", "2.1", "1.5"]
     })
     st.table(addons)
+    st.download_button("Download Add-Ons Data as Excel", data=to_excel_bytes(addons),
+                       file_name="addons.xlsx",
+                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("Scalable Architecture")
     st.write("The system is designed to support businesses of all sizes.")
@@ -466,6 +623,15 @@ elif selection == "Audit & Compliance":
         audit_period = st.text_input("Audit Period (e.g., Q1 2025)")
         audit_submitted = st.form_submit_button("Conduct Audit")
         if audit_submitted:
+            audit_result = pd.DataFrame({
+                "Audit Type": [audit_type],
+                "Audit Period": [audit_period],
+                "Status": ["Completed (Simulated)"]
+            })
+            st.table(audit_result)
+            st.download_button("Download Audit Report as Excel", data=to_excel_bytes(audit_result),
+                               file_name="audit_report.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"{audit_type} for {audit_period} completed (simulated).")
     
     st.subheader("Audit Logs")
@@ -475,6 +641,9 @@ elif selection == "Audit & Compliance":
         "Action": ["Created Invoice", "Processed Salary", "Updated Ledger", "Generated Report", "Logged in"]
     })
     st.table(audit_logs)
+    st.download_button("Download Audit Logs as Excel", data=to_excel_bytes(audit_logs),
+                       file_name="audit_logs.xlsx",
+                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     st.success("Audit logs displayed (simulation).")
 
 # 14. Industry-Specific Features
@@ -488,6 +657,15 @@ elif selection == "Industry-Specific Features":
         price = st.number_input("Price", min_value=0.0, step=1.0)
         pos_submitted = st.form_submit_button("Simulate POS Sale")
         if pos_submitted:
+            pos_df = pd.DataFrame({
+                "Item": [item],
+                "Price": [price],
+                "Date": [datetime.now().strftime("%Y-%m-%d")]
+            })
+            st.table(pos_df)
+            st.download_button("Download POS Sale Data as Excel", data=to_excel_bytes(pos_df),
+                               file_name="pos_sale.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"POS sale for {item} at {price} processed (simulated).")
     
     st.subheader("Manufacturing")
@@ -498,6 +676,16 @@ elif selection == "Industry-Specific Features":
         quantity = st.number_input("Quantity", min_value=1, step=1)
         bom_submitted = st.form_submit_button("Add BOM Entry")
         if bom_submitted:
+            bom_df = pd.DataFrame({
+                "Product": [product],
+                "Component": [component],
+                "Quantity": [quantity],
+                "Date": [datetime.now().strftime("%Y-%m-%d")]
+            })
+            st.table(bom_df)
+            st.download_button("Download BOM Data as Excel", data=to_excel_bytes(bom_df),
+                               file_name="bom.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"BOM entry for {product} with component {component} (x{quantity}) added (simulated).")
     
     st.subheader("Services")
@@ -507,8 +695,25 @@ elif selection == "Industry-Specific Features":
         hours = st.number_input("Hours Worked", min_value=0.0, step=0.5)
         services_submitted = st.form_submit_button("Log Hours")
         if services_submitted:
+            services_df = pd.DataFrame({
+                "Project": [project],
+                "Hours Worked": [hours],
+                "Date": [datetime.now().strftime("%Y-%m-%d")]
+            })
+            st.table(services_df)
+            st.download_button("Download Time Log as Excel", data=to_excel_bytes(services_df),
+                               file_name="time_log.xlsx",
+                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"{hours} hours logged for project {project} (simulated).")
 
+# 15. TallyPrime Features
+elif selection == "TallyPrime Features":
+    st.header("TallyPrime (Latest Version) Features")
+    st.write("• Simplified and user-friendly interface")
+    st.write("• Go To Feature for quick navigation")
+    st.write("• Customizable Workspaces")
+    st.write("• Advanced search and filtering options")
+    st.success("Experience the modernized interface and workflow enhancements.")
 
 # 16. Support & Training
 elif selection == "Support & Training":
@@ -521,5 +726,7 @@ elif selection == "Support & Training":
 # Sidebar Information
 st.sidebar.markdown("---")
 st.sidebar.info(
-   
+    "This demo Streamlit app simulates a comprehensive Tally-like system with Excel-based file uploads/downloads, "
+    "current calculation formulas, and every simulated feature is downloadable as an Excel file. "
+    "In a full implementation, these sections would integrate with real data sources and business logic."
 )
