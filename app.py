@@ -160,6 +160,7 @@ elif selection == "Inventory Management":
     
     st.subheader("Batch-wise Tracking")
     st.write("Enter batch details for inventory items.")
+    batch_df = None
     with st.form("batch_form"):
         item_name = st.text_input("Item Name")
         batch_number = st.text_input("Batch Number")
@@ -172,10 +173,11 @@ elif selection == "Inventory Management":
                 "Expiry Date": [expiry_date]
             })
             st.table(batch_df)
-            st.download_button("Download Batch Data as Excel", data=to_excel_bytes(batch_df),
-                               file_name="batch_tracking.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"Batch {batch_number} for {item_name} with expiry {expiry_date} added (simulated).")
+    if batch_df is not None:
+        st.download_button("Download Batch Data as Excel", data=to_excel_bytes(batch_df),
+                           file_name="batch_tracking.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("Multi-location Support & GST Compliance")
     st.write("Select a warehouse location to view inventory.")
@@ -183,6 +185,7 @@ elif selection == "Inventory Management":
     st.write(f"Displaying inventory for {location}")
     
     st.subheader("GST Calculation")
+    gst_result = None
     with st.form("gst_calc_form"):
         base_price = st.number_input("Base Price", min_value=0.0, step=10.0)
         gst_rate = st.number_input("GST Rate (%)", min_value=0.0, step=0.5, value=18.0)
@@ -190,40 +193,43 @@ elif selection == "Inventory Management":
         if gst_submitted:
             gst_amount = base_price * gst_rate / 100  # Current formula for GST
             total_price = base_price + gst_amount
-            result_df = pd.DataFrame({
+            gst_result = pd.DataFrame({
                 "Base Price": [base_price],
                 "GST Rate (%)": [gst_rate],
                 "GST Amount": [gst_amount],
                 "Total Price": [total_price]
             })
-            st.table(result_df)
-            st.download_button("Download GST Calculation as Excel", data=to_excel_bytes(result_df),
-                               file_name="gst_calculation.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            st.table(gst_result)
             st.success(f"GST: {gst_amount:.2f}, Total Price: {total_price:.2f} (simulated).")
+    if gst_result is not None:
+        st.download_button("Download GST Calculation as Excel", data=to_excel_bytes(gst_result),
+                           file_name="gst_calculation.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 # 3. Taxation & Compliance
 elif selection == "Taxation & Compliance":
     st.header("Taxation and Compliance")
     
     st.subheader("GST Compliance")
+    gst_invoice_df = None
     with st.form("gst_form"):
         customer = st.text_input("Customer Name")
         amount = st.number_input("Invoice Amount", min_value=0.0, step=10.0)
         submitted = st.form_submit_button("Generate GST Invoice")
         if submitted:
-            gst_invoice = pd.DataFrame({
+            gst_invoice_df = pd.DataFrame({
                 "Customer": [customer],
                 "Invoice Amount": [amount]
             })
-            st.table(gst_invoice)
-            st.download_button("Download GST Invoice as Excel", data=to_excel_bytes(gst_invoice),
-                               file_name="gst_invoice.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            st.table(gst_invoice_df)
             st.success(f"GST Invoice generated for {customer} for amount {amount} (simulation).")
+    if gst_invoice_df is not None:
+        st.download_button("Download GST Invoice as Excel", data=to_excel_bytes(gst_invoice_df),
+                           file_name="gst_invoice.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("TDS & TCS")
-    st.write("Calculate TDS and TCS deductions using current formulas.")
+    tds_tcs_df = None
     with st.form("tds_tcs_form"):
         income = st.number_input("Total Income", min_value=0.0, step=100.0)
         tds_rate = st.number_input("TDS Rate (%)", min_value=0.0, step=0.5, value=10.0)
@@ -240,13 +246,14 @@ elif selection == "Taxation & Compliance":
                 "TCS": [tcs]
             })
             st.table(tds_tcs_df)
-            st.download_button("Download TDS/TCS Calculation as Excel", data=to_excel_bytes(tds_tcs_df),
-                               file_name="tds_tcs_calculation.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"TDS: {tds:.2f}, TCS: {tcs:.2f} (simulated).")
+    if tds_tcs_df is not None:
+        st.download_button("Download TDS/TCS Calculation as Excel", data=to_excel_bytes(tds_tcs_df),
+                           file_name="tds_tcs_calculation.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("VAT, Excise & E-Way Bill")
-    st.write("Enter details to calculate VAT, excise duty and generate an e-way bill.")
+    vat_excise_df = None
     with st.form("vat_excise_form"):
         product_value = st.number_input("Product Value", min_value=0.0, step=10.0)
         vat_rate = st.number_input("VAT Rate (%)", min_value=0.0, step=0.5, value=12.0)
@@ -263,12 +270,14 @@ elif selection == "Taxation & Compliance":
                 "Excise Duty": [excise_amount]
             })
             st.table(vat_excise_df)
-            st.download_button("Download VAT/Excise Calculation as Excel", data=to_excel_bytes(vat_excise_df),
-                               file_name="vat_excise_calculation.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"VAT: {vat_amount:.2f}, Excise Duty: {excise_amount:.2f} (simulated).")
+    if vat_excise_df is not None:
+        st.download_button("Download VAT/Excise Calculation as Excel", data=to_excel_bytes(vat_excise_df),
+                           file_name="vat_excise_calculation.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.write("Generate E-Way Bill")
+    eway_df = None
     with st.form("eway_bill_form"):
         consigner = st.text_input("Consigner")
         consignee = st.text_input("Consignee")
@@ -282,16 +291,18 @@ elif selection == "Taxation & Compliance":
                 "Date": [datetime.now().strftime("%Y-%m-%d")]
             })
             st.table(eway_df)
-            st.download_button("Download E-Way Bill as Excel", data=to_excel_bytes(eway_df),
-                               file_name="e_way_bill.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"E-Way Bill generated for consigner {consigner} (simulated).")
+    if eway_df is not None:
+        st.download_button("Download E-Way Bill as Excel", data=to_excel_bytes(eway_df),
+                           file_name="e_way_bill.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 # 4. Invoicing & Billing
 elif selection == "Invoicing & Billing":
     st.header("Invoicing and Billing")
     
     st.subheader("Customizable Invoices")
+    invoice_df = None
     with st.form("invoice_form"):
         inv_number = st.text_input("Invoice Number")
         cust_name = st.text_input("Customer Name")
@@ -305,12 +316,14 @@ elif selection == "Invoicing & Billing":
                 "Date": [datetime.now().strftime("%Y-%m-%d")]
             })
             st.table(invoice_df)
-            st.download_button("Download Invoice as Excel", data=to_excel_bytes(invoice_df),
-                               file_name="invoice.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"Invoice {inv_number} generated for {cust_name} (simulation).")
+    if invoice_df is not None:
+        st.download_button("Download Invoice as Excel", data=to_excel_bytes(invoice_df),
+                           file_name="invoice.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("Sales/Purchase Orders")
+    order_df = None
     with st.form("order_form"):
         order_type = st.selectbox("Order Type", ["Sales Order", "Purchase Order"])
         order_number = st.text_input("Order Number")
@@ -324,12 +337,14 @@ elif selection == "Invoicing & Billing":
                 "Date": [datetime.now().strftime("%Y-%m-%d")]
             })
             st.table(order_df)
-            st.download_button("Download Order as Excel", data=to_excel_bytes(order_df),
-                               file_name="order.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"{order_type} {order_number} placed for amount {order_amount} (simulated).")
+    if order_df is not None:
+        st.download_button("Download Order as Excel", data=to_excel_bytes(order_df),
+                           file_name="order.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("Credit/Debit Notes")
+    note_df = None
     with st.form("credit_debit_form"):
         note_type = st.selectbox("Note Type", ["Credit Note", "Debit Note"])
         note_number = st.text_input("Note Number")
@@ -343,10 +358,11 @@ elif selection == "Invoicing & Billing":
                 "Date": [datetime.now().strftime("%Y-%m-%d")]
             })
             st.table(note_df)
-            st.download_button("Download Note as Excel", data=to_excel_bytes(note_df),
-                               file_name="credit_debit_note.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"{note_type} {note_number} generated for amount {note_amount} (simulated).")
+    if note_df is not None:
+        st.download_button("Download Note as Excel", data=to_excel_bytes(note_df),
+                           file_name="credit_debit_note.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("Multi-User Support")
     st.write("Multi-user support is handled on the server side with session management.")
@@ -367,6 +383,7 @@ elif selection == "Payroll Management":
                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("Salary Processing")
+    salary_df = None
     with st.form("salary_form"):
         emp_id = st.selectbox("Select Employee ID", employees["Employee ID"])
         basic_salary = st.number_input("Basic Salary", min_value=0.0, step=100.0)
@@ -381,13 +398,14 @@ elif selection == "Payroll Management":
                 "Total Salary": [total_salary]
             })
             st.table(salary_df)
-            st.download_button("Download Salary Data as Excel", data=to_excel_bytes(salary_df),
-                               file_name="salary_processing.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"Salary processed for Employee {emp_id}: Total = {total_salary}")
+    if salary_df is not None:
+        st.download_button("Download Salary Data as Excel", data=to_excel_bytes(salary_df),
+                           file_name="salary_processing.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("Statutory Compliance & Payslip Generation")
-    st.write("Enter details to generate a payslip.")
+    payslip = None
     with st.form("payslip_form"):
         emp_name = st.selectbox("Employee", employees["Name"])
         designation = st.text_input("Designation")
@@ -406,10 +424,11 @@ elif selection == "Payroll Management":
                 "Net Salary": [net_salary]
             })
             st.table(payslip)
-            st.download_button("Download Payslip as Excel", data=to_excel_bytes(payslip),
-                               file_name="payslip.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success("Payslip generated (simulation).")
+    if payslip is not None:
+        st.download_button("Download Payslip as Excel", data=to_excel_bytes(payslip),
+                           file_name="payslip.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 # 6. Reporting & Analytics
 elif selection == "Reporting & Analytics":
@@ -520,27 +539,30 @@ elif selection == "Banking & Payments":
     st.header("Banking and Payments")
     
     st.subheader("Bank Integration")
+    bank_integration_df = None
     with st.form("bank_integration_form"):
         bank_name = st.text_input("Bank Name")
         account_number = st.text_input("Account Number")
         integration_submitted = st.form_submit_button("Sync Bank Data")
         if integration_submitted:
-            integration_df = pd.DataFrame({
+            bank_integration_df = pd.DataFrame({
                 "Bank Name": [bank_name],
                 "Account Number": [account_number],
                 "Sync Date": [datetime.now().strftime("%Y-%m-%d")]
             })
-            st.table(integration_df)
-            st.download_button("Download Bank Integration Data as Excel", data=to_excel_bytes(integration_df),
-                               file_name="bank_integration.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            st.table(bank_integration_df)
             st.success(f"Bank data from {bank_name} synced successfully (simulated).")
+    if bank_integration_df is not None:
+        st.download_button("Download Bank Integration Data as Excel", data=to_excel_bytes(bank_integration_df),
+                           file_name="bank_integration.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("Payment Reminders")
     if st.button("Send Payment Reminders"):
         st.success("Payment reminders sent successfully (simulation).")
     
     st.subheader("Cheque Printing")
+    cheque_df = None
     with st.form("cheque_form"):
         payee = st.text_input("Payee Name")
         amount = st.number_input("Amount", min_value=0.0, step=10.0)
@@ -554,10 +576,11 @@ elif selection == "Banking & Payments":
                 "Date": [datetime.now().strftime("%Y-%m-%d")]
             })
             st.table(cheque_df)
-            st.download_button("Download Cheque as Excel", data=to_excel_bytes(cheque_df),
-                               file_name="cheque.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"Cheque {cheque_number} for {payee} printed (simulated).")
+    if cheque_df is not None:
+        st.download_button("Download Cheque as Excel", data=to_excel_bytes(cheque_df),
+                           file_name="cheque.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 # 10. Multi-Company & Multi-Location
 elif selection == "Multi-Company & Multi-Location":
@@ -618,6 +641,7 @@ elif selection == "Audit & Compliance":
     st.header("Audit and Compliance")
     
     st.subheader("Internal and Statutory Audit")
+    audit_result = None
     with st.form("audit_form"):
         audit_type = st.selectbox("Audit Type", ["Internal Audit", "Statutory Audit"])
         audit_period = st.text_input("Audit Period (e.g., Q1 2025)")
@@ -629,10 +653,11 @@ elif selection == "Audit & Compliance":
                 "Status": ["Completed (Simulated)"]
             })
             st.table(audit_result)
-            st.download_button("Download Audit Report as Excel", data=to_excel_bytes(audit_result),
-                               file_name="audit_report.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"{audit_type} for {audit_period} completed (simulated).")
+    if audit_result is not None:
+        st.download_button("Download Audit Report as Excel", data=to_excel_bytes(audit_result),
+                           file_name="audit_report.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("Audit Logs")
     audit_logs = pd.DataFrame({
@@ -652,6 +677,7 @@ elif selection == "Industry-Specific Features":
     
     st.subheader("Retail")
     st.write("Includes POS Integration and Barcode Support.")
+    pos_df = None
     with st.form("pos_form"):
         item = st.text_input("Item")
         price = st.number_input("Price", min_value=0.0, step=1.0)
@@ -663,13 +689,14 @@ elif selection == "Industry-Specific Features":
                 "Date": [datetime.now().strftime("%Y-%m-%d")]
             })
             st.table(pos_df)
-            st.download_button("Download POS Sale Data as Excel", data=to_excel_bytes(pos_df),
-                               file_name="pos_sale.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"POS sale for {item} at {price} processed (simulated).")
+    if pos_df is not None:
+        st.download_button("Download POS Sale Data as Excel", data=to_excel_bytes(pos_df),
+                           file_name="pos_sale.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("Manufacturing")
-    st.write("Bill of Materials (BOM) and Job Costing.")
+    bom_df = None
     with st.form("bom_form"):
         product = st.text_input("Product Name")
         component = st.text_input("Component Name")
@@ -683,13 +710,14 @@ elif selection == "Industry-Specific Features":
                 "Date": [datetime.now().strftime("%Y-%m-%d")]
             })
             st.table(bom_df)
-            st.download_button("Download BOM Data as Excel", data=to_excel_bytes(bom_df),
-                               file_name="bom.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"BOM entry for {product} with component {component} (x{quantity}) added (simulated).")
+    if bom_df is not None:
+        st.download_button("Download BOM Data as Excel", data=to_excel_bytes(bom_df),
+                           file_name="bom.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
     st.subheader("Services")
-    st.write("Project-based Accounting and Time Tracking.")
+    services_df = None
     with st.form("services_form"):
         project = st.text_input("Project Name")
         hours = st.number_input("Hours Worked", min_value=0.0, step=0.5)
@@ -701,10 +729,11 @@ elif selection == "Industry-Specific Features":
                 "Date": [datetime.now().strftime("%Y-%m-%d")]
             })
             st.table(services_df)
-            st.download_button("Download Time Log as Excel", data=to_excel_bytes(services_df),
-                               file_name="time_log.xlsx",
-                               mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             st.success(f"{hours} hours logged for project {project} (simulated).")
+    if services_df is not None:
+        st.download_button("Download Time Log as Excel", data=to_excel_bytes(services_df),
+                           file_name="time_log.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 # 15. TallyPrime Features
 elif selection == "TallyPrime Features":
