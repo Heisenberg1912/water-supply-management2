@@ -21,8 +21,8 @@ if not st.session_state["logged_in"]:
     st.title("Tally App Login")
     st.write("Please log in with your user ID and password.")
     
-    # Dummy credentials for demonstration. Replace with your own verification logic.
-    DUMMY_CREDENTIALS = {"admin": "password123", "user": "user123"}
+    # Dummy credentials: set username as 'tushar' and password as 'batham'
+    DUMMY_CREDENTIALS = {"tushar": "batham"}
     
     with st.form("login_form"):
         username = st.text_input("User ID")
