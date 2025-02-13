@@ -5,3 +5,6 @@ tensorflow
 keras
 numpy
 opencv-python-headless
+xlsxwriter
+openpyxl
+pandas
