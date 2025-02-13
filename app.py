@@ -521,7 +521,5 @@ elif selection == "Support & Training":
 # Sidebar Information
 st.sidebar.markdown("---")
 st.sidebar.info(
-    "This demo Streamlit app simulates a comprehensive Tally-like system with Excel-based file uploads/downloads "
-    "and current calculation formulas. Each module demonstrates core functionalities with simulated data. "
-    "In a full implementation, these sections would integrate with real data sources and business logic."
+   
 )
