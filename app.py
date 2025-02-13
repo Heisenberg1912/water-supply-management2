@@ -15,7 +15,7 @@ def to_excel_bytes(df):
 st.set_page_config(page_title="Comprehensive Tally App", layout="wide")
 
 # App Title
-st.title("Comprehensive Tally-like Application")
+st.title("Comprehensive Inventory-management Application")
 
 # Sidebar Navigation for Modules
 modules = [
