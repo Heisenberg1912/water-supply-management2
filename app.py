@@ -56,7 +56,6 @@ else:
         "Cloud & Mobile Support",
         "Audit & Compliance",
         "Industry-Specific Features",
-        "Support & Training"
     ]
     
     selection = st.sidebar.selectbox("Select Module", modules)
@@ -752,7 +751,7 @@ else:
     # ---------------- Sidebar Information ---------------- #
     st.sidebar.markdown("---")
     st.sidebar.info(
-        "This demo Streamlit app simulates a comprehensive Tally-like system with Excel-based file uploads/downloads, "
+        "This demo Streamlit app simulates a comprehensive inventory management system with Excel-based file uploads/downloads, "
         "current calculation formulas, and all simulated features are downloadable as Excel files. "
         "In a full implementation, these sections would integrate with real data sources and business logic."
     )
