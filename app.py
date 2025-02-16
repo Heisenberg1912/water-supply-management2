@@ -38,7 +38,7 @@ if not st.session_state["logged_in"]:
 # ---------------- Main Application ---------------- #
 else:
     # Main App Title
-    st.title("Comprehensive Tally-like Application")
+    st.title("Comprehensive inventory management Application")
     
     # Sidebar Navigation for Modules
     modules = [
@@ -56,7 +56,6 @@ else:
         "Cloud & Mobile Support",
         "Audit & Compliance",
         "Industry-Specific Features",
-        "TallyPrime Features",
         "Support & Training"
     ]
     
