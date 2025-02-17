@@ -18,7 +18,7 @@ if "logged_in" not in st.session_state:
 
 # ---------------- Login Screen ---------------- #
 if not st.session_state["logged_in"]:
-    st.title("Tally App Login")
+    st.title("Inventory managment App Login")
     st.write("Please log in with your user ID and password.")
     
     # Dummy credentials: set username as 'tushar' and password as 'batham'
@@ -533,7 +533,7 @@ else:
                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         
         st.subheader("Remote Access")
-        st.write("Access your system remotely via: https://remote.tallyapp.com (simulated)")
+        st.write("Access your system remotely via: https://remote.Inventory managmentapp.com (simulated)")
     
     # ---------------- Module 9: Banking & Payments ---------------- #
     elif selection == "Banking & Payments":
@@ -605,7 +605,7 @@ else:
     elif selection == "Customization & Scalability":
         st.header("Customization and Scalability")
         
-        st.subheader("Tally Definition Language (TDL)")
+        st.subheader("Inventory managment Definition Language (TDL)")
         tdl_script = st.text_area("TDL Script", height=150)
         if st.button("Run TDL Script"):
             st.success("TDL script executed (simulated).")
@@ -731,9 +731,9 @@ else:
                                file_name="time_log.xlsx",
                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     
-    # ---------------- Module 15: TallyPrime Features ---------------- #
-    elif selection == "TallyPrime Features":
-        st.header("TallyPrime (Latest Version) Features")
+    # ---------------- Module 15: Inventory managmentPrime Features ---------------- #
+    elif selection == "Inventory managmentPrime Features":
+        st.header("Inventory managmentPrime (Latest Version) Features")
         st.write("• Simplified and user-friendly interface")
         st.write("• Go To Feature for quick navigation")
         st.write("• Customizable Workspaces")
@@ -743,9 +743,9 @@ else:
     # ---------------- Module 16: Support & Training ---------------- #
     elif selection == "Support & Training":
         st.header("Support and Training")
-        st.write("Access Tally Academy for training and certification programs.")
+        st.write("Access Inventory managment Academy for training and certification programs.")
         st.write("Enjoy 24/7 customer support for troubleshooting and queries.")
-        st.markdown("[Visit Support Portal](https://support.tallyapp.com)")
+        st.markdown("[Visit Support Portal](https://support.Inventory managmentapp.com)")
         st.success("Support & Training resources loaded (simulated).")
     
     # ---------------- Sidebar Information ---------------- #
