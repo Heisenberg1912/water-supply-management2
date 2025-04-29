@@ -3,343 +3,453 @@ import pandas as pd
 import numpy as np
 import io
 from datetime import datetime, timedelta
+import uuid
+
+# ---------------- Page Config ---------------- #
+st.set_page_config(page_title="Inventory Management App", layout="wide")
 
 # ---------------- Helper Functions ---------------- #
 def to_excel_bytes(df):
-    """Convert a DataFrame to Excel bytes."""
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Sheet1')
-    return output.getvalue()
+    buf = io.BytesIO()
+    with pd.ExcelWriter(buf, engine="xlsxwriter") as writer:
+        df.to_excel(writer, index=False, sheet_name="Sheet1")
+    return buf.getvalue()
 
-# Simulate arbitrary DataFrame
-def simulate_df(rows, cols=1, val_range=(100,1000), start_date='2025-01-01', freq='D'):
-    dates = pd.date_range(start=start_date, periods=rows, freq=freq)
-    data = {f"Col_{i+1}": np.random.randint(val_range[0], val_range[1], size=rows) for i in range(cols)}
-    df = pd.DataFrame(data)
-    df['Date'] = dates
-    return df
-
-# ---------------- Session State Initialization ---------------- #
-# Ensure all required session state keys are initialized with defaults
-default_state = {
-    'logged_in': False,
-    'username': None,
-    'role': None,
-    'gst_entries': [],
-    'invoices': [],
-    'settings': {'theme': 'Light', 'date_format': '%Y-%m-%d'},
-    'api_keys': []
+# ---------------- Session-State Initialization ---------------- #
+DEFAULT_KEYS = {
+    "logged_in": False,
+    "username": None,
+    "role": None,
+    "ledger_entries": [],
+    "inventory_items": [],
+    "gst_entries": [],
+    "invoices": [],
+    "payroll_runs": [],
+    "report_data": [],
+    "transactions": [],
+    "audit_logs": [],
+    "users": [],
+    "api_keys": [],
+    "settings": {},
 }
-for key, default in default_state.items():
+for key, default in DEFAULT_KEYS.items():
     if key not in st.session_state:
         st.session_state[key] = default
 
-# ---------------- Dummy Credentials ---------------- #
+# ---------------- Dummy Credentials & Admin User List ---------------- #
 DUMMY_CREDENTIALS = {
-    'admin': ('adminpass', 'admin'),
-    'tushar': ('batham', 'user')
+    "admin": ("adminpass", "admin"),
+    "tushar": ("batham", "user")
 }
-
-# ---------------- Page Configuration ---------------- #
-st.set_page_config(
-    page_title='Inventory Management System',
-    layout='wide',
-    initial_sidebar_state='expanded'
-)
+if not st.session_state["users"]:
+    for u, (pw, role) in DUMMY_CREDENTIALS.items():
+        st.session_state["users"].append({
+            "username": u,
+            "role": role,
+            "id": str(uuid.uuid4())[:8]
+        })
 
 # ---------------- Login ---------------- #
-if not st.session_state['logged_in']:
-    st.title('🔐 Login to Inventory Management System')
-    with st.form('login_form'):
-        username = st.text_input('User ID')
-        password = st.text_input('Password', type='password')
-        remember = st.checkbox('Remember me')
-        submit = st.form_submit_button('Login')
-        if submit:
-            creds = DUMMY_CREDENTIALS.get(username)
-            if creds and creds[0] == password:
-                st.session_state['logged_in'] = True
-                st.session_state['username'] = username
-                st.session_state['role'] = creds[1]
-                st.success(f'Welcome, {username.title()}! You are logged in as {creds[1].title()}.')
-                st.experimental_rerun()
+if not st.session_state["logged_in"]:
+    with st.form("login_form"):
+        st.title("🔐 Inventory Management Login")
+        user_in = st.text_input("User ID")
+        pw_in = st.text_input("Password", type="password")
+        remember = st.checkbox("Remember me")
+        submitted = st.form_submit_button("Login")
+        if submitted:
+            creds = DUMMY_CREDENTIALS.get(user_in)
+            if creds and creds[0] == pw_in:
+                st.session_state["logged_in"] = True
+                st.session_state["username"] = user_in
+                st.session_state["role"] = creds[1]
+                msg = f"Logged in as {user_in.title()} ({creds[1]})"
+                if remember:
+                    st.success(msg + " — you’ll stay logged in!")
+                else:
+                    st.success(msg)
+                st.rerun()
             else:
-                st.error('Invalid credentials, please try again.')
+                st.error("❌ Invalid credentials.")
     st.stop()
 
-# ---------------- Main Application ---------------- #
-user = st.session_state['username']
-role = st.session_state['role']
+# ---------------- Main Dashboard ---------------- #
+user = st.session_state["username"]
+role = st.session_state["role"]
+st.sidebar.header(f"👋 {user.title()}")
+st.sidebar.subheader(f"Role: {role.title()}")
+st.sidebar.markdown("---")
 
-# Sidebar
-st.sidebar.title('🗂️ Navigation')
-st.sidebar.write(f'**User:** {user.title()}')
-st.sidebar.write(f'**Role:** {role.title()}')
-st.sidebar.markdown('---')
+USER_MODULES = [
+    "Accounting",
+    "Inventory",
+    "Taxation",
+    "Invoicing",
+    "Payroll",
+    "Reporting",
+    "Banking",
+    "Customization",
+    "Audit",
+]
+ADMIN_EXTRA = ["User Mgmt", "Sys Settings", "Audit Logs", "API Control"]
+MODULES = USER_MODULES + (ADMIN_EXTRA if role == "admin" else [])
 
-def get_modules(role):
-    base = [
-        'Accounting & Financial Management',
-        'Inventory Management',
-        'Taxation & Compliance',
-        'Invoicing & Billing',
-        'Payroll Management',
-        'Reporting & Analytics',
-        'Banking & Payments',
-        'Customization & Scalability',
-        'Audit & Compliance'
-    ]
-    admin_extra = [
-        'Data Security & Backup',
-        'Integration & Connectivity',
-        'Multi-Company & Multi-Location',
-        'Cloud & Mobile Support',
-        'User Management',
-        'System Settings',
-        'Audit Logs',
-        'API Access Control'
-    ]
-    return base + admin_extra if role == 'admin' else base
+selection = st.sidebar.selectbox("Module", MODULES)
+st.title("📊 Inventory Management Dashboard")
 
-modules = get_modules(role)
-selection = st.sidebar.selectbox('Select Module', modules)
-st.title('📊 Inventory Management Dashboard')
+# ---------------- Module: Accounting ---------------- #
+if selection == "Accounting":
+    st.header("🧾 Accounting & Financial Management")
+    if not st.session_state["ledger_entries"]:
+        df0 = pd.DataFrame({
+            "Date": pd.date_range("2025-01-01", periods=8),
+            "Account": np.random.choice(
+                ["Sales","Expenses","Assets","Liabilities","Equity"], size=8
+            ),
+            "Amount": np.random.randint(-2000, 5000, size=8)
+        })
+        st.session_state["ledger_entries"] = df0.to_dict("records")
 
-# ---------------- Module 1: Accounting & Financial Management ---------------- #
-if selection == 'Accounting & Financial Management':
-    st.header('🧾 Accounting & Financial Management')
-    if st.button('Simulate Monthly Ledger Entries'):
-        df = simulate_df(12, 3, (1000, 5000), freq='M')
-        df.rename(columns={'Col_1': 'Debit', 'Col_2': 'Credit', 'Col_3': 'Balance'}, inplace=True)
-        st.table(df)
-        st.download_button('Download Ledger Excel', data=to_excel_bytes(df), file_name='ledger.xlsx')
+    ledger_df = pd.DataFrame(st.session_state["ledger_entries"])
+    st.subheader("General Ledger")
+    st.table(ledger_df)
+    st.download_button("Download Ledger", to_excel_bytes(ledger_df), "ledger.xlsx")
 
-    st.markdown('---')
-    # Financial Ratios
-    ratios = pd.DataFrame({
-        'Metric': ['Gross Margin', 'EBITDA Margin', 'Return on Equity'],
-        'Value (%)': np.round(np.random.rand(3) * 50 + 10, 2)
-    })
-    st.subheader('Key Financial Ratios')
-    st.table(ratios)
+    with st.expander("➕ Add Ledger Entry"):
+        with st.form("ledger_form"):
+            date = st.date_input("Date", value=datetime.today())
+            account = st.selectbox(
+                "Account", ["Sales","Expenses","Assets","Liabilities","Equity"]
+            )
+            amount = st.number_input("Amount", value=0)
+            ok = st.form_submit_button("Add")
+            if ok:
+                st.session_state["ledger_entries"].append({
+                    "Date": date.strftime("%Y-%m-%d"),
+                    "Account": account,
+                    "Amount": amount
+                })
+                st.success("Entry added.")
+                st.rerun()
 
-# ---------------- Module 2: Inventory Management ---------------- #
-elif selection == 'Inventory Management':
-    st.header('📦 Inventory Management')
-    inv_df = pd.DataFrame({
-        'Item': [f'Item_{i}' for i in range(1, 11)],
-        'Stock': np.random.randint(0, 200, 10),
-        'Reorder Level': np.random.randint(20, 100, 10)
-    })
-    inv_df['Status'] = np.where(inv_df['Stock'] <= inv_df['Reorder Level'], '🔴 Reorder', '✅ In Stock')
-    st.subheader('Current Stock Status')
-    st.dataframe(inv_df)
+# ---------------- Module: Inventory ---------------- #
+elif selection == "Inventory":
+    st.header("📦 Inventory Management")
+    if not st.session_state["inventory_items"]:
+        df1 = pd.DataFrame({
+            "Item": [f"Item {c}" for c in ["A","B","C","D","E"]],
+            "Stock": np.random.randint(0,200,size=5),
+            "Reorder": np.random.randint(10,50,size=5)
+        })
+        st.session_state["inventory_items"] = df1.to_dict("records")
 
-    st.markdown('---')
-    # Search / Filter
-    search_term = st.text_input('Search Items')
-    if search_term:
-        filtered = inv_df[inv_df['Item'].str.contains(search_term, case=False)]
-        st.table(filtered)
+    inv_df = pd.DataFrame(st.session_state["inventory_items"])
+    st.subheader("Stock Levels")
+    st.table(inv_df)
+    st.download_button("Download Inventory", to_excel_bytes(inv_df), "inventory.xlsx")
 
-    if st.button('Simulate Replenishment'): 
-        inv_df['Stock'] = inv_df['Stock'] + np.random.randint(10, 50, len(inv_df))
-        st.success('Stock levels updated!')
-        st.dataframe(inv_df)
+    with st.expander("➕ Add Inventory Item"):
+        with st.form("inv_form"):
+            name = st.text_input("Item Name")
+            stock = st.number_input("Stock Level", min_value=0)
+            reorder = st.number_input("Reorder Level", min_value=0)
+            add = st.form_submit_button("Add")
+            if add:
+                st.session_state["inventory_items"].append({
+                    "Item": name,
+                    "Stock": stock,
+                    "Reorder": reorder
+                })
+                st.success("Item added.")
+                st.rerun()
 
-# ---------------- Module 3: Taxation & Compliance ---------------- #
-elif selection == 'Taxation & Compliance':
-    st.header('🧮 Taxation & Compliance')
-    with st.expander('Add GST Invoice Entry'):
-        with st.form('gst_form'):
-            past = [e['Customer'] for e in st.session_state['gst_entries']]
-            cust = st.selectbox('Customer', options=['<New>'] + past)
-            if cust == '<New>': cust = st.text_input('New Customer Name')
-            amt = st.number_input('Amount (₹)', min_value=0.0, step=0.01)
-            if st.form_submit_button('Add Entry'):
-                entry = {'Customer': cust, 'Amount': amt, 'Date': datetime.now().strftime('%Y-%m-%d')}
-                st.session_state['gst_entries'].append(entry)
-                st.success(f'Added entry for {cust}: ₹{amt:.2f}')
-                st.experimental_rerun()
+# ---------------- Module: Taxation ---------------- #
+elif selection == "Taxation":
+    st.header("🧮 Taxation & Compliance")
+    if not st.session_state["gst_entries"]:
+        sim = pd.DataFrame({
+            "Customer": np.random.choice(
+                ["ABC Corp","XYZ Ltd","Foo Inc"], 5
+            ),
+            "Amount": np.round(np.random.uniform(1000,5000,5),2),
+            "Date": pd.date_range("2025-03-01", periods=5).strftime("%Y-%m-%d")
+        })
+        st.session_state["gst_entries"] = sim.to_dict("records")
 
-    if st.session_state['gst_entries']:
-        gst_df = pd.DataFrame(st.session_state['gst_entries'])
-        st.subheader('GST Invoice Entries')
-        st.table(gst_df)
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button('Simulate Tax Adjustment'):
-                gst_df['Amount'] *= np.random.uniform(0.9, 1.1, len(gst_df))
-                st.table(gst_df)
-        with col2:
-            if st.button('Download All GST Invoices'):
-                st.download_button('Download Excel', data=to_excel_bytes(gst_df), file_name='gst_invoices.xlsx')
+    gst_df = pd.DataFrame(st.session_state["gst_entries"])
+    st.subheader("GST Invoices")
+    st.table(gst_df)
+    st.download_button("Download GST", to_excel_bytes(gst_df), "gst.xlsx")
 
-# ---------------- Module 4: Invoicing & Billing ---------------- #
-elif selection == 'Invoicing & Billing':
-    st.header('🧾 Invoicing & Billing')
-    with st.expander('Generate New Invoice'):
-        with st.form('invoice_form'):
-            inv_no = st.text_input('Invoice Number')
-            cust = st.text_input('Customer Name')
-            amt = st.number_input('Amount (₹)', min_value=0.0, step=0.01)
-            date = st.date_input('Date', value=datetime.now().date())
-            if st.form_submit_button('Create Invoice'):
-                st.session_state['invoices'].append({'Invoice#': inv_no, 'Customer': cust, 'Amount': amt, 'Date': date.strftime('%Y-%m-%d')})
-                st.success(f'Invoice {inv_no} created.')
-                st.experimental_rerun()
+    with st.expander("➕ Add GST Entry"):
+        with st.form("gst_form"):
+            cust = st.text_input("Customer")
+            amt  = st.number_input("Amount", min_value=0.0)
+            date = st.date_input("Date", value=datetime.today())
+            add  = st.form_submit_button("Add")
+            if add:
+                st.session_state["gst_entries"].append({
+                    "Customer": cust,
+                    "Amount": amt,
+                    "Date": date.strftime("%Y-%m-%d")
+                })
+                st.success("GST entry added.")
+                st.rerun()
 
-    if st.session_state['invoices']:
-        inv_df = pd.DataFrame(st.session_state['invoices'])
-        st.subheader('Invoice History')
-        st.dataframe(inv_df)
-        if st.button('Apply Bulk Discount 5%'):
-            inv_df['Amount'] *= 0.95
-            st.table(inv_df)
-        if st.button('Download All Invoices'):
-            st.download_button('Download Excel', data=to_excel_bytes(inv_df), file_name='all_invoices.xlsx')
+# ---------------- Module: Invoicing ---------------- #
+elif selection == "Invoicing":
+    st.header("💳 Invoicing & Billing")
+    if not st.session_state["invoices"]:
+        invs = pd.DataFrame({
+            "Invoice#": [f"INV{1000+i}" for i in range(5)],
+            "Customer": np.random.choice(["Acme","Beta","Gamma"], 5),
+            "Amount": np.round(np.random.uniform(500,3000,5),2),
+            "Date": pd.date_range("2025-02-01", periods=5).strftime("%Y-%m-%d")
+        })
+        st.session_state["invoices"] = invs.to_dict("records")
 
-# ---------------- Module 5: Payroll Management ---------------- #
-elif selection == 'Payroll Management':
-    st.header('💼 Payroll Management')
-    payroll_df = simulate_df(10, 2, (30000, 70000))
-    payroll_df.rename(columns={'Col_1': 'Gross Pay', 'Col_2': 'Deductions'}, inplace=True)
-    payroll_df['Net Pay'] = payroll_df['Gross Pay'] - payroll_df['Deductions']
-    st.subheader('Payroll Summary')
-    st.table(payroll_df)
-    if st.button('Simulate Year-End Bonus 10%'):
-        payroll_df['Net Pay'] *= 1.1
-        st.table(payroll_df)
-    st.download_button('Download Payslips Excel', data=to_excel_bytes(payroll_df), file_name='payslips.xlsx')
+    inv_df = pd.DataFrame(st.session_state["invoices"])
+    st.subheader("Invoice History")
+    st.table(inv_df)
+    st.download_button("Download All Invoices", to_excel_bytes(inv_df), "invoices.xlsx")
 
-# ---------------- Module 6: Reporting & Analytics ---------------- #
-elif selection == 'Reporting & Analytics':
-    st.header('📈 Reporting & Analytics')
-    report_df = simulate_df(30, 1, (0, 100))
-    report_df.rename(columns={'Col_1': 'Metric Value'}, inplace=True)
-    st.subheader('Metric Trend')
-    st.line_chart(report_df.set_index('Date')['Metric Value'])
-    if st.button('Simulate Anomaly Spike'):
-        idx = np.random.randint(0, len(report_df))
-        report_df.at[idx, 'Metric Value'] *= 3
-        st.line_chart(report_df.set_index('Date')['Metric Value'])
-    st.download_button('Download Report CSV', data=report_df.to_csv(index=False), file_name='report.csv')
+    with st.expander("➕ Create Invoice"):
+        with st.form("inv_form"):
+            num  = st.text_input(
+                "Invoice #", value=f"INV{1000+len(inv_df)}"
+            )
+            cust = st.text_input("Customer")
+            amt  = st.number_input("Amount", min_value=0.0)
+            date = st.date_input("Date", value=datetime.today())
+            go   = st.form_submit_button("Generate")
+            if go:
+                st.session_state["invoices"].append({
+                    "Invoice#": num,
+                    "Customer": cust,
+                    "Amount": amt,
+                    "Date": date.strftime("%Y-%m-%d")
+                })
+                st.success("Invoice created.")
+                st.rerun()
 
-# ---------------- Module 7: Banking & Payments ---------------- #
-elif selection == 'Banking & Payments':
-    st.header('🏦 Banking & Payments')
-    bank_df = simulate_df(7, 1, (100, 2000))
-    bank_df.rename(columns={'Col_1': 'Amount'}, inplace=True)
-    bank_df['Type'] = np.random.choice(['Debit', 'Credit'], len(bank_df))
-    st.subheader('Recent Transactions')
-    st.table(bank_df)
-    if st.button('Simulate Interest Accrual 1%'):
-        bank_df['Amount'] *= 1.01
-        st.table(bank_df)
-    st.download_button('Download Transactions Excel', data=to_excel_bytes(bank_df), file_name='transactions.xlsx')
+# ---------------- Module: Payroll ---------------- #
+elif selection == "Payroll":
+    st.header("💼 Payroll Management")
+    if not st.session_state["payroll_runs"]:
+        pr = pd.DataFrame({
+            "RunID": [f"PR{200+i}" for i in range(4)],
+            "Employee": np.random.choice(
+                ["Alice","Bob","Charlie"], 4
+            ),
+            "Gross": np.random.randint(20000,50000,4),
+            "Deductions": np.random.randint(1000,5000,4)
+        })
+        pr["Net"] = pr["Gross"] - pr["Deductions"]
+        st.session_state["payroll_runs"] = pr.to_dict("records")
 
-# ---------------- Module 8: Customization & Scalability ---------------- #
-elif selection == 'Customization & Scalability':
-    st.header('⚙️ Customization & Scalability')
-    theme = st.selectbox('Theme', ['Light', 'Dark'])
-    date_fmt = st.selectbox('Date Format', ['%Y-%m-%d', '%d/%m/%Y', '%m-%d-%Y'])
-    if st.button('Save Settings'):
-        st.session_state['settings']['theme'] = theme
-        st.session_state['settings']['date_format'] = date_fmt
-        st.success('Settings updated.')
-    if st.button('Simulate Load Test'): 
-        users = np.random.randint(100, 1000)
-        st.info(f'Successfully handled {users} concurrent users.')
+    pay_df = pd.DataFrame(st.session_state["payroll_runs"])
+    st.subheader("Payroll Runs")
+    st.table(pay_df)
+    st.download_button("Download Payroll", to_excel_bytes(pay_df), "payroll.xlsx")
 
-# ---------------- Module 9: Audit & Compliance ---------------- #
-elif selection == 'Audit & Compliance':
-    st.header('✅ Audit & Compliance')
-    audit_df = simulate_df(15,1,(0,1))
-    audit_df.rename(columns={'Col_1': 'ActionFlag'}, inplace=True)
-    audit_df['User'] = np.random.choice([user, 'system'], len(audit_df))
-    st.subheader('Audit Log')
-    st.dataframe(audit_df)
-    if st.button('Simulate Security Scan'): st.success('No issues found.')
-    st.download_button('Download Audit Log', data=to_excel_bytes(audit_df), file_name='audit_log.xlsx')
+    with st.expander("➕ Run Payroll"):
+        with st.form("pay_form"):
+            emp = st.text_input("Employee")
+            gross = st.number_input("Gross Salary", min_value=0)
+            ded = st.number_input("Deductions", min_value=0)
+            run = st.form_submit_button("Process")
+            if run:
+                net = gross - ded
+                st.session_state["payroll_runs"].append({
+                    "RunID": f"PR{300+len(pay_df)}",
+                    "Employee": emp,
+                    "Gross": gross,
+                    "Deductions": ded,
+                    "Net": net
+                })
+                st.success("Payroll processed.")
+                st.rerun()
+
+# ---------------- Module: Reporting ---------------- #
+elif selection == "Reporting":
+    st.header("📈 Reporting & Analytics")
+    if not st.session_state["report_data"]:
+        dates = pd.date_range("2025-01-01", periods=10)
+        vals = np.random.randn(10).cumsum()
+        st.session_state["report_data"] = pd.DataFrame({
+            "Date": dates, "Value": vals
+        }).to_dict("records")
+
+    df_report = pd.DataFrame(st.session_state["report_data"])
+    st.line_chart(df_report.set_index("Date"))
+    st.download_button(
+        "Download Report",
+        to_excel_bytes(df_report),
+        "report.csv",
+        mime="text/csv"
+    )
+
+    with st.expander("➕ Add Data Point"):
+        with st.form("rep_form"):
+            date = st.date_input("Date", value=datetime.today())
+            val  = st.number_input("Value", value=0.0)
+            add  = st.form_submit_button("Add")
+            if add:
+                st.session_state["report_data"].append({
+                    "Date": date.strftime("%Y-%m-%d"),
+                    "Value": val
+                })
+                st.success("Data point added.")
+                st.rerun()
+
+# ---------------- Module: Banking ---------------- #
+elif selection == "Banking":
+    st.header("🏦 Banking & Payments")
+    if not st.session_state["transactions"]:
+        tx = pd.DataFrame({
+            "Date": pd.date_range("2025-03-10", periods=6),
+            "Type": np.random.choice(["Debit","Credit"], 6),
+            "Amount": np.random.randint(100,2000,6)
+        })
+        st.session_state["transactions"] = tx.to_dict("records")
+
+    tx_df = pd.DataFrame(st.session_state["transactions"])
+    st.subheader("Transactions")
+    st.table(tx_df)
+    st.download_button(
+        "Download Transactions",
+        to_excel_bytes(tx_df),
+        "transactions.xlsx"
+    )
+
+    with st.expander("➕ Add Transaction"):
+        with st.form("tx_form"):
+            ttype = st.selectbox("Type", ["Debit","Credit"])
+            amt   = st.number_input("Amount", min_value=0)
+            date  = st.date_input("Date", value=datetime.today())
+            add   = st.form_submit_button("Add")
+            if add:
+                st.session_state["transactions"].append({
+                    "Date": date.strftime("%Y-%m-%d"),
+                    "Type": ttype,
+                    "Amount": amt
+                })
+                st.success("Transaction added.")
+                st.rerun()
+
+# ---------------- Module: Customization ---------------- #
+elif selection == "Customization":
+    st.header("⚙️ Customization & Scalability")
+    theme = st.selectbox(
+        "Theme",
+        ["Light","Dark"],
+        index=["Light","Dark"].index(
+            st.session_state["settings"].get("theme","Light")
+        )
+    )
+    if st.button("Apply Theme"):
+        st.session_state["settings"]["theme"] = theme
+        st.success(f"Theme set to {theme}")
+
+# ---------------- Module: Audit ---------------- #
+elif selection == "Audit":
+    st.header("📋 Audit & Compliance")
+    if not st.session_state["audit_logs"]:
+        logs = pd.DataFrame({
+            "Timestamp": pd.date_range(
+                datetime.now(), periods=5, freq="T"
+            ),
+            "User": np.random.choice(
+                ["Alice","Bob","Charlie"], 5
+            ),
+            "Action": np.random.choice(
+                ["Login","Update","Delete","Create"], 5
+            )
+        })
+        st.session_state["audit_logs"] = logs.to_dict("records")
+
+    log_df = pd.DataFrame(st.session_state["audit_logs"])
+    st.table(log_df)
+    st.download_button(
+        "Download Logs",
+        to_excel_bytes(log_df),
+        "audit_logs.csv"
+    )
+
+    with st.expander("➕ Add Audit Entry"):
+        with st.form("log_form"):
+            usr = st.text_input("User")
+            act = st.text_input("Action")
+            add = st.form_submit_button("Add")
+            if add:
+                st.session_state["audit_logs"].append({
+                    "Timestamp": datetime.now().strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),
+                    "User": usr,
+                    "Action": act
+                })
+                st.success("Log entry added.")
+                st.rerun()
 
 # ---------------- Admin-Only Modules ---------------- #
-elif role == 'admin' and selection == 'Data Security & Backup':
-    st.header('🔒 Data Security & Backup')
-    backup_time = st.time_input('Schedule Automated Backup Time', value=datetime.now().time())
-    if st.button('Schedule Backup'): st.success(f'Backup scheduled at {backup_time}.')
-    if st.button('Encrypt All Data'): st.success('All data encrypted with AES-256 (simulated).')
-
-elif role == 'admin' and selection == 'Integration & Connectivity':
-    st.header('🔗 Integration & Connectivity')
-    endpoints = pd.DataFrame({
-        'Endpoint': ['/api/ledger','/api/inventory','/api/payroll'],
-        'Status': np.random.choice(['Active','Inactive','Error'],3)
-    })
-    st.subheader('API Endpoints Status')
-    st.table(endpoints)
-    if st.button('Simulate Re-auth'): st.success('All integrations re-authenticated.')
-
-elif role == 'admin' and selection == 'Multi-Company & Multi-Location':
-    st.header('🏢 Multi-Company & Multi-Location')
-    comp_df = pd.DataFrame({
-        'Company': ['Alpha','Beta','Gamma'],
-        'Revenue': np.random.randint(50000,150000,3),
-        'Expenses': np.random.randint(20000,80000,3)
-    })
-    comp_df['Profit'] = comp_df['Revenue'] - comp_df['Expenses']
-    st.table(comp_df)
-    if st.button('Generate Consolidated Report'): st.success('Consolidated report ready.')
-
-elif role == 'admin' and selection == 'Cloud & Mobile Support':
-    st.header('☁️ Cloud & Mobile Support')
-    logs_df = simulate_df(5,2,(1,100))
-    logs_df.rename(columns={'Col_1':'Cloud Deploys','Col_2':'Mobile Installs'}, inplace=True)
-    st.table(logs_df)
-    if st.button('Simulate New Mobile Release'): st.success('Mobile v2.0 released.')
-
-elif role == 'admin' and selection == 'User Management':
-    st.header('👥 User Management')
-    users_df = pd.DataFrame([{'User': u, 'Role': r} for u,(p,r) in DUMMY_CREDENTIALS.items()])
+elif role=="admin" and selection=="User Mgmt":
+    st.header("👥 User Management")
+    users_df = pd.DataFrame(st.session_state["users"])
     st.table(users_df)
-    with st.form('new_user'):
-        nu = st.text_input('New Username')
-        npw = st.text_input('New Password', type='password')
-        nr = st.selectbox('Role', ['user','admin'])
-        if st.form_submit_button('Add User'):
-            DUMMY_CREDENTIALS[nu] = (npw,nr)
-            st.success(f'User {nu} added as {nr}.')
+    with st.expander("➕ Add User"):
+        with st.form("user_form"):
+            uname = st.text_input("Username")
+            pwd   = st.text_input("Password", type="password")
+            r     = st.selectbox("Role", ["admin","user"])
+            add   = st.form_submit_button("Add")
+            if add:
+                DUMMY_CREDENTIALS[uname] = (pwd, r)
+                st.session_state["users"].append({
+                    "username": uname,
+                    "role": r,
+                    "id": str(uuid.uuid4())[:8]
+                })
+                st.success("User added.")
+                st.rerun()
 
-elif role == 'admin' and selection == 'System Settings':
-    st.header('⚙️ System Settings')
-    title = st.text_input('Application Title', value='Inventory Management Dashboard')
-    maint = st.checkbox('Maintenance Mode')
-    if st.button('Save System Settings'):
-        st.session_state['settings']['title'] = title
-        st.session_state['settings']['maintenance'] = maint
-        st.success('System settings updated.')
+elif role=="admin" and selection=="Sys Settings":
+    st.header("⚙️ System Settings")
+    title = st.text_input(
+        "App Title",
+        st.session_state["settings"].get(
+            "title","Inventory Management App"
+        )
+    )
+    if st.button("Save"):
+        st.session_state["settings"]["title"] = title
+        st.success("Settings saved.")
 
-elif role == 'admin' and selection == 'Audit Logs':
-    st.header('📋 Audit Logs')
-    st.dataframe(audit_df)
-    if st.button('Clear Audit Logs'): st.success('Audit logs cleared.')
+elif role=="admin" and selection=="Audit Logs":
+    st.header("📂 Audit Logs (Admin)")
+    st.table(log_df)
 
-elif role == 'admin' and selection == 'API Access Control':
-    st.header('🔑 API Access Control')
-    if 'api_keys' not in st.session_state: st.session_state['api_keys'] = []
-    if st.button('Generate API Key'):
-        key = 'KEY-' + datetime.now().strftime('%Y%m%d%H%M%S')
-        st.session_state['api_keys'].append(key)
-        st.success(f'Generated: {key}')
-    if st.session_state['api_keys']:
-        st.subheader('Active API Keys')
-        st.write(st.session_state['api_keys'])
+elif role=="admin" and selection=="API Control":
+    st.header("🔑 API Access Control")
+    st.table(pd.DataFrame(
+        st.session_state["api_keys"],
+        columns=["Key","Created"]
+    ))
+    if st.button("Generate API Key"):
+        new_key = str(uuid.uuid4())
+        st.session_state["api_keys"].append([
+            new_key,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        ])
+        st.success("API key generated.")
+        st.rerun()
 
 else:
-    st.warning('🚫 Access Denied or Module Not Implemented.')
+    st.warning("🚫 Access Denied or Module Not Implemented.")
 
 # ---------------- Logout ---------------- #
-st.sidebar.markdown('---')
-if st.sidebar.button('Logout'):
-    for k in list(st.session_state.keys()): st.session_state.pop(k)
-    st.experimental_rerun()
+st.sidebar.markdown("---")
+if st.sidebar.button("Logout"):
+    for k in list(DEFAULT_KEYS):
+        del st.session_state[k]
+    st.rerun()
