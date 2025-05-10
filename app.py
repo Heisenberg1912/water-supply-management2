@@ -5,13 +5,6 @@ import io
 from datetime import datetime, timedelta
 import uuid
 
-# def load_custom_css():
-#     with open("styles.css") as f:
-#         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
-# # Call this function before your layout starts
-# load_custom_css()
-
 # ---------------- Page Config ---------------- #
 st.set_page_config(page_title="Inventory Management App", layout="wide")
 
